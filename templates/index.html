@@ -1,68 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Rainfall Predictor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .hidden{display:none}
+        .radio-group{display:flex;gap:8px}
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+        .form-group{display:flex;flex-direction:column}
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Rainfall Prediction</h1>
         <p>Enter the weather details to predict whether it will rain tomorrow.</p>
-        
-        <form id="prediction-form">
-            <div class="form-grid">
+
+        <form id="prediction-form" novalidate>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+                <label><input type="radio" name="mode" value="manual" checked> Manual input</label>
+                <label><input type="radio" name="mode" value="location"> Use location (fetch forecast)</label>
+            </div>
+
+            <div id="manual-fields" class="form-grid">
                 <div class="form-group">
-                    <label for="sunshine">Sunshine (hours)</label>
-                    <input type="number" id="sunshine" step="0.1" required>
+                    <label for="datetime">Datetime</label>
+                    <input name="datetime" id="datetime" type="datetime-local" required>
                 </div>
                 <div class="form-group">
-                    <label for="humidity9am">Humidity at 9am (%)</label>
-                    <input type="number" id="humidity9am" step="1" required>
+                    <label for="temperature">Temperature (°C)</label>
+                    <input name="temperature" id="temperature" type="number" step="0.1" required>
                 </div>
                 <div class="form-group">
-                    <label for="humidity3pm">Humidity at 3pm (%)</label>
-                    <input type="number" id="humidity3pm" step="1" required>
+                    <label for="humidity">Humidity (%)</label>
+                    <input name="humidity" id="humidity" type="number" step="1" min="0" max="100" required>
                 </div>
                 <div class="form-group">
-                    <label for="pressure9am">Pressure at 9am (hPa)</label>
-                    <input type="number" id="pressure9am" step="0.1" required>
+                    <label for="wind_speed">Wind Speed (m/s)</label>
+                    <input name="wind_speed" id="wind_speed" type="number" step="0.1" required>
                 </div>
                 <div class="form-group">
-                    <label for="pressure3pm">Pressure at 3pm (hPa)</label>
-                    <input type="number" id="pressure3pm" step="0.1" required>
+                    <label for="pressure">Pressure (hPa)</label>
+                    <input name="pressure" id="pressure" type="number" step="0.1" required>
                 </div>
                 <div class="form-group">
-                    <label for="cloud9am">Cloud at 9am (oktas)</label>
-                    <input type="number" id="cloud9am" step="1" required>
-                </div>
-                <div class="form-group">
-                    <label for="cloud3pm">Cloud at 3pm (oktas)</label>
-                    <input type="number" id="cloud3pm" step="1" required>
-                </div>
-                <div class="form-group">
-                    <label for="temp9am">Temperature at 9am (°C)</label>
-                    <input type="number" id="temp9am" step="0.1" required>
-                </div>
-                <div class="form-group">
-                    <label for="temp3pm">Temperature at 3pm (°C)</label>
-                    <input type="number" id="temp3pm" step="0.1" required>
-                </div>
-                <div class="form-group">
-                    <label for="raintoday">Rain Today? (1 for Yes, 0 for No)</label>
-                    <input type="number" id="raintoday" step="1" required>
+                    <label for="weather_desc">Weather Description</label>
+                    <input name="weather_desc" id="weather_desc" type="text" placeholder="e.g., light rain" required>
                 </div>
             </div>
+
+            <div id="location-fields" class="form-grid hidden">
+                <div class="form-group">
+                    <label for="lat">Latitude</label>
+                    <input name="lat" id="lat" type="number" step="0.0001">
+                </div>
+                <div class="form-group">
+                    <label for="lon">Longitude</label>
+                    <input name="lon" id="lon" type="number" step="0.0001">
+                </div>
+                <div class="form-group">
+                    <label for="units">Units</label>
+                    <select id="units" name="units">
+                        <option value="metric">Metric (°C, m/s)</option>
+                        <option value="imperial">Imperial (°F, mph)</option>
+                    </select>
+                </div>
+            </div>
+
             <button type="submit">Predict</button>
         </form>
-        
+
         <div id="result" class="hidden">
             <h2>Prediction Result</h2>
-            <p>Will it rain tomorrow? <span id="prediction-output"></span></p>
+            <p>Will it rain tomorrow? <strong id="prediction-output"></strong></p>
+            <p id="probability" style="font-size:0.9em;color:#555;"></p>
         </div>
     </div>
-    
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <script>
+    (function(){
+        const form = document.getElementById('prediction-form');
+        const result = document.getElementById('result');
+        const output = document.getElementById('prediction-output');
+        const probEl = document.getElementById('probability');
+        const manualFields = document.getElementById('manual-fields');
+        const locationFields = document.getElementById('location-fields');
+
+        // Toggle fields based on selected mode
+        const modes = document.getElementsByName('mode');
+        modes.forEach(r => r.addEventListener('change', () => {
+            const isManual = document.querySelector('input[name="mode"]:checked').value === 'manual';
+            if (isManual) {
+                manualFields.classList.remove('hidden');
+                locationFields.classList.add('hidden');
+                document.getElementById('lat').required = false;
+                document.getElementById('lon').required = false;
+                document.getElementById('datetime').required = true;
+            } else {
+                manualFields.classList.add('hidden');
+                locationFields.classList.remove('hidden');
+                document.getElementById('lat').required = true;
+                document.getElementById('lon').required = true;
+                document.getElementById('datetime').required = false;
+            }
+        }));
+
+        // Attempt to auto-detect location and auto-submit prediction
+        function tryAutoDetectAndPredict() {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = pos.coords.latitude.toFixed(4);
+                const lon = pos.coords.longitude.toFixed(4);
+                document.querySelector('input[name="mode"][value="location"]').checked = true;
+                document.querySelectorAll('input[name="mode"]').forEach(r=>r.dispatchEvent(new Event('change')));
+                document.getElementById('lat').value = lat;
+                document.getElementById('lon').value = lon;
+                // small delay to allow UI update
+                setTimeout(() => {
+                    // Use requestSubmit if available to run form validation handlers
+                    if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                    else form.submit();
+                }, 200);
+            }, (err) => {
+                // If geolocation fails or denied, leave manual mode active
+                console.log('Geolocation not available or denied:', err.message);
+            }, {timeout:5000});
+        }
+
+        // Run auto-detect on load
+        window.addEventListener('load', tryAutoDetectAndPredict);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            let payload = {};
+
+            if (mode === 'manual') {
+                const dt = document.getElementById('datetime').value;
+                const tempVal = parseFloat(document.getElementById('temperature').value);
+                const humVal = parseFloat(document.getElementById('humidity').value);
+                const windVal = parseFloat(document.getElementById('wind_speed').value);
+                const presVal = parseFloat(document.getElementById('pressure').value);
+
+                // Validate manual inputs before sending
+                if (!dt || isNaN(tempVal) || isNaN(humVal) || isNaN(windVal) || isNaN(presVal)) {
+                    output.textContent = 'Please fill all manual fields with valid values before submitting.';
+                    probEl.textContent = '';
+                    result.classList.remove('hidden');
+                    return;
+                }
+
+                payload = {
+                    datetime: dt,
+                    temperature: tempVal,
+                    humidity: humVal,
+                    wind_speed: windVal,
+                    pressure: presVal,
+                    weather_desc: document.getElementById('weather_desc').value
+                };
+            } else {
+                const lat = document.getElementById('lat').value;
+                const lon = document.getElementById('lon').value;
+                const units = document.getElementById('units').value;
+                if (!lat || !lon || isNaN(parseFloat(lat)) || isNaN(parseFloat(lon))) {
+                    output.textContent = 'Please enter valid latitude and longitude for location mode.';
+                    probEl.textContent = '';
+                    result.classList.remove('hidden');
+                    return;
+                }
+                payload = { lat: parseFloat(lat), lon: parseFloat(lon), units };
+            }
+
+            try {
+                const resp = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || 'Server error');
+
+                // Expecting { prediction_mm, prediction_inches }
+                if (data.prediction_mm !== undefined) {
+                    output.textContent = `${data.prediction_mm} mm (${data.prediction_inches} in)`;
+                    probEl.textContent = '';
+                } else if (data.prediction !== undefined) {
+                    output.textContent = data.prediction;
+                } else {
+                    output.textContent = 'No prediction returned';
+                }
+
+                result.classList.remove('hidden');
+            } catch (err) {
+                output.textContent = 'Error: ' + err.message;
+                probEl.textContent = '';
+                result.classList.remove('hidden');
+            }
+        });
+    })();
+    </script>
 </body>
 </html>

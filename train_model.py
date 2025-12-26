@@ -18,7 +18,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # It's recommended to store API keys securely, e.g., as environment variables, rather than hardcoding.
-API_KEY = os.getenv("OPENWEATHER_API_KEY", "Place_your_api_key_here") # Fallback for convenience
+API_KEY = os.getenv("OPENWEATHER_API_KEY", "98978729593a6890d12daaf6e3492d66") # Fallback for convenience
 LATITUDE = 25.35
 LONGITUDE = 85.08
 # Free tier limit: 60 calls/min, 5 day/3 hour forecast.
