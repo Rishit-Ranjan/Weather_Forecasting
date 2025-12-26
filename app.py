@@ -15,7 +15,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Load environment
 load_dotenv(os.path.join(BASE_DIR, '.env'))
-OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY', "98978729593a6890d12daaf6e3492d66")
+env_key = os.getenv('OPENWEATHER_API_KEY')
+# Use fallback if env var is missing or is the placeholder text
+OPENWEATHER_API_KEY = env_key if env_key and env_key != "your_api_key_here" else "98978729593a6890d12daaf6e3492d66"
 
 # Check model artifacts exist (model_module will also load them when predicting)
 missing = [p for p in ['rainfall_predictor_model.pkl','scaler.pkl','model_columns.pkl'] if not os.path.exists(os.path.join(BASE_DIR,p))]
