@@ -14,10 +14,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # It's recommended to store API keys securely, e.g., as environment variables, rather than hardcoding.
-API_KEY = os.getenv("OPENWEATHER_API_KEY", "your_api_key_here") # Fallback for convenience
+API_KEY = os.getenv("OPENWEATHER_API_KEY", "Place_your_api_key_here") # Fallback for convenience
 LATITUDE = 23.12
 LONGITUDE = 77.05
 BASE_URL = f'http://api.openweathermap.org/data/2.5/forecast?lat={LATITUDE}&lon={LONGITUDE}&appid={API_KEY}&units=metric'
+
+# Define base directory for saving artifacts
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def fetch_weather_data(url):
     """Fetches weather data from the OpenWeatherMap API."""
@@ -71,11 +74,12 @@ def main():
     print("Fetching weather data...")
     raw_data = fetch_weather_data(BASE_URL)
     df = parse_forecast_data(raw_data)
-    df.to_csv('weather_data.csv', index=False)
+    csv_path = os.path.join(BASE_DIR, 'weather_data.csv')
+    df.to_csv(csv_path, index=False)
     print("Weather data saved to weather_data.csv")
 
     print("Preprocessing data...")
-    df = preprocess_data(pd.read_csv('weather_data.csv'))
+    df = preprocess_data(pd.read_csv(csv_path))
 
     # Prepare features and target
     X = df.drop(['datetime', 'rainfall_3h'], axis=1)
@@ -83,7 +87,7 @@ def main():
 
     # Save the feature names for the prediction step
     model_columns = X.columns.tolist()
-    joblib.dump(model_columns, 'model_columns.pkl')
+    joblib.dump(model_columns, os.path.join(BASE_DIR, 'model_columns.pkl'))
     print("Model columns saved to model_columns.pkl")
 
     # Split Data into Training and Testing Sets
@@ -96,7 +100,7 @@ def main():
     X_test[features_to_scale] = scaler.transform(X_test[features_to_scale])
 
     # Save the scaler
-    joblib.dump(scaler, 'scaler.pkl')
+    joblib.dump(scaler, os.path.join(BASE_DIR, 'scaler.pkl'))
     print("Scaler saved to scaler.pkl")
 
     print("Training the model...")
@@ -115,7 +119,7 @@ def main():
     print(f"R-squared Score: {r2:.4f}")
 
     # Save the Trained Model
-    joblib.dump(model, 'rainfall_predictor_model.pkl')
+    joblib.dump(model, os.path.join(BASE_DIR, 'rainfall_predictor_model.pkl'))
     print("Model saved to rainfall_predictor_model.pkl")
 
 if __name__ == "__main__":
