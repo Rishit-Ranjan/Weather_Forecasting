@@ -13,4 +13,7 @@ python train_model.py
 Once the model is trained, we can make a new prediction by running the predict_rainfall.py script:
 python predict_rainfall.py <br/>
 
-<img width="989" height="340" alt="Screenshot 2025-09-11 181857" src="https://github.com/user-attachments/assets/15b05eee-109e-44c2-af0f-3c26e496ad41" />
+<img width="833" height="221" alt="image" src="https://github.com/user-attachments/assets/e611a6e4-e0e7-462b-8c8f-021eee74bbf4" /><br/><br/>
+
+<img width="1639" height="959" alt="image" src="https://github.com/user-attachments/assets/9182c4d9-c513-4ea1-b3e7-08450f56090f" />
+
