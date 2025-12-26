@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 import datetime
 import joblib
+import time
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
@@ -17,6 +18,7 @@ load_dotenv()
 API_KEY = os.getenv("OPENWEATHER_API_KEY", "Place_your_api_key_here") # Fallback for convenience
 LATITUDE = 23.12
 LONGITUDE = 77.05
+# Free tier limit: 60 calls/min, 5 day/3 hour forecast.
 BASE_URL = f'http://api.openweathermap.org/data/2.5/forecast?lat={LATITUDE}&lon={LONGITUDE}&appid={API_KEY}&units=metric'
 
 # Define base directory for saving artifacts
@@ -74,17 +76,28 @@ def main():
     if API_KEY == "Place_your_api_key_here":
         print("Warning: Using placeholder API key. Please set OPENWEATHER_API_KEY environment variable.")
 
-    print("Fetching weather data...")
-    try:
-        raw_data = fetch_weather_data(BASE_URL)
-    except Exception as e:
-        print(f"Failed to fetch data: {e}")
-        return
-
-    df = parse_forecast_data(raw_data)
     csv_path = os.path.join(BASE_DIR, 'weather_data.csv')
-    df.to_csv(csv_path, index=False)
-    print("Weather data saved to weather_data.csv")
+
+    # Check cache to respect API limits (60 calls/min)
+    if os.path.exists(csv_path) and (time.time() - os.path.getmtime(csv_path) < 3600):
+        print("Using cached weather data (less than 1 hour old).")
+        df = pd.read_csv(csv_path)
+    else:
+        print("Fetching weather data...")
+        try:
+            raw_data = fetch_weather_data(BASE_URL)
+            df = parse_forecast_data(raw_data)
+            df.to_csv(csv_path, index=False)
+            print("Weather data saved to weather_data.csv")
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429:
+                print("Error: API limit exceeded (429). Please wait before retrying.")
+            else:
+                print(f"HTTP Error: {e}")
+            return
+        except Exception as e:
+            print(f"Failed to fetch data: {e}")
+            return
 
     print("Preprocessing data...")
     # Use the dataframe directly to avoid redundant I/O

@@ -1,5 +1,6 @@
 
 import numpy as np
+import pandas as pd
 from flask import Flask, request, jsonify, render_template
 import joblib
 
@@ -18,16 +19,39 @@ def home():
 def predict():
     try:
         # Get the data from the POST request
-        data = request.get_json(force=True)
+        data = request.get_json()
         
-        # Create a numpy array from the input data
-        final_features = np.array([data['features']])
+        # Parse inputs
+        features_dict = {
+            'temperature': float(data['temperature']),
+            'humidity': float(data['humidity']),
+            'wind_speed': float(data['wind_speed']),
+            'pressure': float(data['pressure']),
+        }
         
-        # Scale the features
-        scaled_features = scaler.transform(final_features)
+        # Process datetime to get hour and dayofweek
+        dt = pd.to_datetime(data['datetime'])
+        features_dict['hour'] = dt.hour
+        features_dict['dayofweek'] = dt.dayofweek
         
-        # Make a prediction
-        prediction = model.predict(scaled_features)
+        # Scale numerical features (Order must match training)
+        scale_cols = ['temperature', 'humidity', 'wind_speed', 'pressure', 'hour', 'dayofweek']
+        df_to_scale = pd.DataFrame([features_dict])[scale_cols]
+        scaled_values = scaler.transform(df_to_scale)
+        
+        # Prepare final dataframe with all model columns initialized to 0
+        input_df = pd.DataFrame(0, index=[0], columns=model_columns)
+        
+        # Fill scaled numerical values
+        input_df.loc[0, scale_cols] = scaled_values[0]
+        
+        # Handle One-Hot Encoding for weather description
+        weather_col = f"weather_{data['weather_desc']}"
+        if weather_col in input_df.columns:
+            input_df.loc[0, weather_col] = 1
+        
+        # Make a prediction using the dataframe
+        prediction = model.predict(input_df)
         
         # Prepare the response
         # The model is LinearRegression, so it predicts rainfall amount in mm, not Yes/No
