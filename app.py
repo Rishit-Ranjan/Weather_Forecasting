@@ -3,13 +3,21 @@ import numpy as np
 import pandas as pd
 from flask import Flask, request, jsonify, render_template
 import joblib
+import os
 
 app = Flask(__name__)
 
-# Load the model
-model = joblib.load('rainfall_predictor_model.pkl')
-scaler = joblib.load('scaler.pkl')
-model_columns = joblib.load('model_columns.pkl')
+# Define base directory to ensure files are found
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Load the model and artifacts
+try:
+    model = joblib.load(os.path.join(BASE_DIR, 'rainfall_predictor_model.pkl'))
+    scaler = joblib.load(os.path.join(BASE_DIR, 'scaler.pkl'))
+    model_columns = joblib.load(os.path.join(BASE_DIR, 'model_columns.pkl'))
+except FileNotFoundError as e:
+    print(f"Error loading model files: {e}")
+    print("Please run train_model.py first.")
 
 @app.route('/')
 def home():
@@ -20,6 +28,15 @@ def predict():
     try:
         # Get the data from the POST request
         data = request.get_json()
+        
+        # Debug: Print received data to console
+        print(f"Received data: {data}")
+
+        # Check for required keys to prevent KeyError
+        required_keys = ['temperature', 'humidity', 'wind_speed', 'pressure', 'datetime', 'weather_desc']
+        missing_keys = [key for key in required_keys if key not in data]
+        if missing_keys:
+            return jsonify({'error': f"Missing keys: {', '.join(missing_keys)}"}), 400
         
         # Parse inputs
         features_dict = {
@@ -60,6 +77,7 @@ def predict():
         return jsonify({'prediction': output})
         
     except Exception as e:
+        print(f"Prediction error: {e}") # Log error to console
         return jsonify({'error': str(e)})
 
 if __name__ == "__main__":

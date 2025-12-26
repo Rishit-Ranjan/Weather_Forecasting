@@ -11,24 +11,32 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
-# It's recommended to store API keys securely, e.g., as environment variables, rather than hardcoding.
-API_KEY = os.getenv("OPENWEATHER_API_KEY", "Place_your_api_key_here") # Fallback for convenience
-LATITUDE = 23.12
-LONGITUDE = 77.05
-# Free tier limit: 60 calls/min, 5 day/3 hour forecast.
-BASE_URL = f'http://api.openweathermap.org/data/2.5/forecast?lat={LATITUDE}&lon={LONGITUDE}&appid={API_KEY}&units=metric'
-
 # Define base directory for saving artifacts
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Load environment variables from .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# It's recommended to store API keys securely, e.g., as environment variables, rather than hardcoding.
+API_KEY = os.getenv("OPENWEATHER_API_KEY", "Place_your_api_key_here") # Fallback for convenience
+LATITUDE = 25.35
+LONGITUDE = 85.08
+# Free tier limit: 60 calls/min, 5 day/3 hour forecast.
+BASE_URL = f'http://api.openweathermap.org/data/2.5/forecast?lat={LATITUDE}&lon={LONGITUDE}&appid={API_KEY}&units=metric'
+
 def fetch_weather_data(url):
     """Fetches weather data from the OpenWeatherMap API."""
-    response = requests.get(url)
-    response.raise_for_status()  # Raise an exception for bad status codes
-    return response.json()
+    # Retry logic to handle the 60 calls/min limit
+    for attempt in range(3):
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 429:
+            print(f"Rate limit exceeded. Waiting 60 seconds... (Attempt {attempt + 1}/3)")
+            time.sleep(60)
+        else:
+            response.raise_for_status()  # Raise an exception for bad status codes
+    raise Exception("Failed to fetch weather data after retries.")
 
 def parse_forecast_data(data):
     """Parses the JSON response from the API into a pandas DataFrame."""
@@ -74,7 +82,9 @@ def preprocess_data(df):
 def main():
     """Main function to run the training pipeline."""
     if API_KEY == "Place_your_api_key_here":
-        print("Warning: Using placeholder API key. Please set OPENWEATHER_API_KEY environment variable.")
+        print("Error: Invalid API Key. You are using the placeholder key.")
+        print("Please create a .env file with: OPENWEATHER_API_KEY=your_actual_key_here")
+        return
 
     csv_path = os.path.join(BASE_DIR, 'weather_data.csv')
 
@@ -89,12 +99,6 @@ def main():
             df = parse_forecast_data(raw_data)
             df.to_csv(csv_path, index=False)
             print("Weather data saved to weather_data.csv")
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 429:
-                print("Error: API limit exceeded (429). Please wait before retrying.")
-            else:
-                print(f"HTTP Error: {e}")
-            return
         except Exception as e:
             print(f"Failed to fetch data: {e}")
             return
