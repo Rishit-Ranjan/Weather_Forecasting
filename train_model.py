@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # It's recommended to store API keys securely, e.g., as environment variables, rather than hardcoding.
-API_KEY = os.getenv("OPENWEATHER_API_KEY", "Place_your_api_key_here") # Fallback for convenience
+API_KEY = os.getenv("OPENWEATHER_API_KEY", "your_api_key_here") # Fallback for convenience
 LATITUDE = 23.12
 LONGITUDE = 77.05
 BASE_URL = f'http://api.openweathermap.org/data/2.5/forecast?lat={LATITUDE}&lon={LONGITUDE}&appid={API_KEY}&units=metric'

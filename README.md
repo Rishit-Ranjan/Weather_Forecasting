@@ -11,6 +11,6 @@ python train_model.py
 
 ## Make a Prediction: 
 Once the model is trained, we can make a new prediction by running the predict_rainfall.py script:
-python predict_rainfall.py <br/><br/>
+python predict_rainfall.py <br/>
 
 <img width="989" height="340" alt="Screenshot 2025-09-11 181857" src="https://github.com/user-attachments/assets/15b05eee-109e-44c2-af0f-3c26e496ad41" />
