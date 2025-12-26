@@ -1,8 +1,8 @@
-requests
+flask
 pandas
-scikit-learn
-python-dotenv
-Flask
-gunicorn
 numpy
+scikit-learn
 joblib
+python-dotenv
+requests
+gunicorn
