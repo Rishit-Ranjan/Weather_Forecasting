@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainfall Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Rainfall Prediction</h1>
+        <p>Enter the weather details to predict whether it will rain tomorrow.</p>
+        
+        <form id="prediction-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="sunshine">Sunshine (hours)</label>
+                    <input type="number" id="sunshine" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="humidity9am">Humidity at 9am (%)</label>
+                    <input type="number" id="humidity9am" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="humidity3pm">Humidity at 3pm (%)</label>
+                    <input type="number" id="humidity3pm" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="pressure9am">Pressure at 9am (hPa)</label>
+                    <input type="number" id="pressure9am" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="pressure3pm">Pressure at 3pm (hPa)</label>
+                    <input type="number" id="pressure3pm" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="cloud9am">Cloud at 9am (oktas)</label>
+                    <input type="number" id="cloud9am" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="cloud3pm">Cloud at 3pm (oktas)</label>
+                    <input type="number" id="cloud3pm" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="temp9am">Temperature at 9am (°C)</label>
+                    <input type="number" id="temp9am" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="temp3pm">Temperature at 3pm (°C)</label>
+                    <input type="number" id="temp3pm" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="raintoday">Rain Today? (1 for Yes, 0 for No)</label>
+                    <input type="number" id="raintoday" step="1" required>
+                </div>
+            </div>
+            <button type="submit">Predict</button>
+        </form>
+        
+        <div id="result" class="hidden">
+            <h2>Prediction Result</h2>
+            <p>Will it rain tomorrow? <span id="prediction-output"></span></p>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

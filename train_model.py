@@ -63,7 +63,7 @@ def preprocess_data(df):
     df['dayofweek'] = df['datetime'].dt.dayofweek
 
     # One-hot encode weather description
-    weather_dummies = pd.get_dummies(df['weather_desc'], prefix='weather')
+    weather_dummies = pd.get_dummies(df['weather_desc'], prefix='weather', dtype=int)
     df = pd.concat([df, weather_dummies], axis=1)
     df.drop('weather_desc', axis=1, inplace=True)
     
@@ -71,15 +71,24 @@ def preprocess_data(df):
 
 def main():
     """Main function to run the training pipeline."""
+    if API_KEY == "Place_your_api_key_here":
+        print("Warning: Using placeholder API key. Please set OPENWEATHER_API_KEY environment variable.")
+
     print("Fetching weather data...")
-    raw_data = fetch_weather_data(BASE_URL)
+    try:
+        raw_data = fetch_weather_data(BASE_URL)
+    except Exception as e:
+        print(f"Failed to fetch data: {e}")
+        return
+
     df = parse_forecast_data(raw_data)
     csv_path = os.path.join(BASE_DIR, 'weather_data.csv')
     df.to_csv(csv_path, index=False)
     print("Weather data saved to weather_data.csv")
 
     print("Preprocessing data...")
-    df = preprocess_data(pd.read_csv(csv_path))
+    # Use the dataframe directly to avoid redundant I/O
+    df = preprocess_data(df)
 
     # Prepare features and target
     X = df.drop(['datetime', 'rainfall_3h'], axis=1)

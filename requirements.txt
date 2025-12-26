@@ -1,4 +1,8 @@
 requests
 pandas
-scikit-learn
+scikit-learn==1.2.2
 python-dotenv
+Flask
+gunicorn
+numpy
+joblib
