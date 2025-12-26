@@ -1,65 +1,57 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
-    min-height: 100vh;
+    background-color: #f4f4f9;
     display: flex;
     justify-content: center;
     align-items: center;
+    min-height: 100vh;
     margin: 0;
 }
 .container {
     background: white;
     padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    width: 100%;
-    max-width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 400px;
 }
-h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
-}
-.form-group {
-    margin-bottom: 1rem;
-}
-label {
-    display: block;
-    margin-bottom: 0.5rem;
+h1 { text-align: center; color: #333; }
+.tabs { display: flex; margin-bottom: 1rem; border-bottom: 2px solid #eee; }
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: bold;
     color: #666;
-    font-weight: 600;
 }
-input, select {
+.tab-btn.active { border-bottom: 2px solid #007bff; color: #007bff; }
+.form-group { margin-bottom: 1rem; }
+label { display: block; margin-bottom: 0.5rem; color: #555; }
+input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+button[type="submit"] {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-sizing: border-box;
-    font-size: 1rem;
-}
-button {
-    width: 100%;
-    padding: 12px;
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    margin-top: 1rem;
+    font-size: 1rem;
 }
-button:hover {
-    background-color: #0056b3;
-}
-#result {
+button[type="submit"]:hover { background-color: #0056b3; }
+.result-box {
     margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #e9ecef;
+    border-radius: 4px;
     text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #333;
-    min-height: 1.5em;
 }
-.loading {
-    color: #007bff;
-}
+.hidden { display: none; }
+.error { color: red; }

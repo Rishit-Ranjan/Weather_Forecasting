@@ -15,7 +15,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Load environment
 load_dotenv(os.path.join(BASE_DIR, '.env'))
-OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
+OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY', "98978729593a6890d12daaf6e3492d66")
 
 # Check model artifacts exist (model_module will also load them when predicting)
 missing = [p for p in ['rainfall_predictor_model.pkl','scaler.pkl','model_columns.pkl'] if not os.path.exists(os.path.join(BASE_DIR,p))]
@@ -129,4 +129,4 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
